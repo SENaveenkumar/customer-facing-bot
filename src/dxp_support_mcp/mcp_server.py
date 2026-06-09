@@ -20,6 +20,7 @@ from dxp_support_mcp.tools.contract_mutations import (
 from dxp_support_mcp.tools.contracts import (
     get_contract,
     list_contracts,
+    list_top_dealer_dashboard_alerts,
     list_products_by_account,
     lookup_customer_context,
 )
@@ -106,6 +107,28 @@ def list_products_by_account_tool(
     )
     return _handle(list_products_by_account)(
         client, registry, account_id, term, contract, normalized_currency_id
+    )
+
+
+@mcp.tool()
+def list_top_alerts_tool(
+    first: int = 5,
+    after: str | None = None,
+    search_term: str | None = None,
+    module: str = "CONTRACT",
+) -> str:
+    """List top unresolved/unignored dealer dashboard alerts (defaults to top 5, CONTRACT module)."""
+    normalized_first = max(1, min(first, 5))
+    normalized_module = (module or "CONTRACT").strip().upper() or "CONTRACT"
+    normalized_search_term = (search_term or "").strip() or None
+    normalized_after = (after or "").strip() or None
+    return _handle(list_top_dealer_dashboard_alerts)(
+        client,
+        registry,
+        normalized_first,
+        normalized_after,
+        normalized_search_term,
+        normalized_module,
     )
 
 

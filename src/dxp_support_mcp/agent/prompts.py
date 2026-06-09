@@ -14,6 +14,8 @@ Rules:
 - For product-list requests (no specific customer context), use list_products_by_account_tool.
 - For drafting context (account + customer + products together), use lookup_customer_context_tool.
 - If customer id is missing for a product-list request, do not ask for it; continue with dealer-account product listing.
+- For dashboard alert requests (for example "top 5 alerts"), use list_top_alerts_tool.
+- For dealer dashboard alert summaries, prefer list_top_alerts_tool before asking follow-up questions.
 - For contract errors, renewal blockers, or "what next" questions, use explain_contract_tool.
 - Do not invent account IDs or product SKUs.
 """
@@ -78,6 +80,22 @@ TOOL_DEFINITIONS = [
                     "currency_id": {"type": "string"},
                 },
                 "required": ["account_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_top_alerts_tool",
+            "description": "List top unresolved/unignored dealer dashboard alerts (default top 5)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "first": {"type": "integer"},
+                    "after": {"type": "string"},
+                    "search_term": {"type": "string"},
+                    "module": {"type": "string"},
+                },
             },
         },
     },
