@@ -1,0 +1,21 @@
+query GetProducts(
+  $accountId: ID!
+  $termUom: TermUOMType
+  $contractType: ContractType
+  $currencyId: String
+) {
+  products(
+    accountId: $accountId
+    termUom: $termUom
+    contractType: $contractType
+    currencyId: $currencyId
+  ) {
+    id
+    description
+    isSuperKeyEligible
+    productPricing {
+      id
+      listPrice
+    }
+  }
+}

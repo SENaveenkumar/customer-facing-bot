@@ -1,0 +1,22 @@
+mutation CreateDraftContract($input: CreateQuoteInput!) {
+  createDraftContract(input: $input) {
+    id
+    contractNumber
+    status
+    termQuantity
+    termUOM
+    startDate
+    autoRenew
+    netPriceTotal
+    listPriceSubtotal
+    customerName
+    billToAccount {
+      id
+      companyName
+    }
+    quotes {
+      id
+      validUntilDate
+    }
+  }
+}

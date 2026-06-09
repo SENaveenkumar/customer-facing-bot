@@ -1,0 +1,12 @@
+mutation ConvertContract($id: ID!, $purchaseOrderNumber: String) {
+  convertContract(id: $id, purchaseOrderNumber: $purchaseOrderNumber) {
+    id
+    contractNumber
+    status
+    purchaseOrderNumber
+    netPriceTotal
+    termQuantity
+    termUOM
+    customerName
+  }
+}

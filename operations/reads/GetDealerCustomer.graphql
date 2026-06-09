@@ -1,0 +1,21 @@
+query GetDealerCustomer($dealerAccountId: ID!, $customerAccountId: ID!) {
+  dealerCustomerById(
+    dealerAccountId: $dealerAccountId
+    customerId: $customerAccountId
+  ) {
+    id
+    companyName
+    customerNumber
+    address {
+      id
+      address1
+      city
+    }
+    contacts {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}

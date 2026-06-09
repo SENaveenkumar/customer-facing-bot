@@ -1,0 +1,6 @@
+query SupportBotRead($accountId: ID!, $sql: String!, $maxRows: Int = 100) {
+  supportBotRead(accountId: $accountId, sql: $sql, maxRows: $maxRows) {
+    jsonRows
+    rowCount
+  }
+}

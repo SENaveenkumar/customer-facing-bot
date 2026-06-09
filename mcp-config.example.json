@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "dxp-support": {
+      "command": "python",
+      "args": ["-m", "dxp_support_mcp.mcp_server"],
+      "cwd": "C:/Users/naveese/Desktop/DXP/BE-repo/dxp-support-mcp",
+      "env": {
+        "PYTHONPATH": "C:/Users/naveese/Desktop/DXP/BE-repo/dxp-support-mcp/src",
+        "DXP_GRAPHQL_URL": "http://localhost:5000/graphql",
+        "DXP_BEARER_TOKEN": "<your-dealer-jwt>",
+        "DXP_ACCOUNT_IDS": "<dealer-cdh-account-id>",
+        "MCP_STRICT_WRITES": "true"
+      }
+    }
+  }
+}

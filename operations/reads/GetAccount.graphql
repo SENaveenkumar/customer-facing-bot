@@ -1,0 +1,39 @@
+query GetAccount($id: ID!) {
+  account(id: $id) {
+    id
+    companyName
+    primary
+    currency {
+      id
+      description
+    }
+    defaultBillToContact {
+      id
+      firstName
+      lastName
+      email
+    }
+    defaultBillToAddress {
+      id
+      address1
+      city
+      stateDetails {
+        code
+      }
+      countryDetails {
+        code
+      }
+    }
+    addresses {
+      id
+      address1
+      city
+    }
+    contacts {
+      id
+      firstName
+      lastName
+      email
+    }
+  }
+}

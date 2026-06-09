@@ -1,0 +1,16 @@
+query ListContracts($accountId: ID!, $first: Int = 10) {
+  contractsV2(accountId: $accountId, first: $first) {
+    totalCount
+    nodes {
+      id
+      contractNumber
+      status
+      customerName
+      startDate
+      termQuantity
+      termUOM
+      netPriceTotal
+      purchaseOrderNumber
+    }
+  }
+}

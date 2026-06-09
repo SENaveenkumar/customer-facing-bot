@@ -1,0 +1,55 @@
+query GetContract($id: ID!) {
+  contract(id: $id) {
+    id
+    contractNumber
+    status
+    autoRenew
+    startDate
+    renewalDate
+    termQuantity
+    termUOM
+    purchaseOrderNumber
+    listPriceSubtotal
+    netPriceSubtotal
+    netPriceTotal
+    taxAmount
+    customerName
+    billToAccount {
+      id
+      companyName
+    }
+    billToAddress {
+      id
+      address1
+      city
+      stateDetails {
+        code
+      }
+      countryDetails {
+        code
+      }
+    }
+    billToContact {
+      id
+      firstName
+      lastName
+      email
+    }
+    customer {
+      id
+      companyName
+    }
+    shipToAddress {
+      id
+    }
+    shipToContact {
+      id
+      email
+    }
+    quotes {
+      id
+      status
+      validUntilDate
+    }
+  }
+}

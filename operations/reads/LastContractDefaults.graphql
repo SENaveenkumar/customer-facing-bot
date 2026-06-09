@@ -1,0 +1,19 @@
+query LastContractDefaults($accountId: ID!) {
+  lastContractDefaults(accountId: $accountId) {
+    sourceContractId
+    currencyCode
+    billToContactId
+    billToAddressId
+    billToAccountId
+    customerAccountId
+    shipToAddressId
+    shipToContactId
+    termUOM
+    termQuantity
+    autoRenew
+    quoteLines {
+      productId
+      quantity
+    }
+  }
+}
