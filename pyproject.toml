@@ -9,11 +9,16 @@ dependencies = [
   "httpx>=0.28.0",
   "python-dotenv>=1.0.0",
   "pydantic>=2.0.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
+  "gradio>=5.0.0",
 ]
 
 [project.scripts]
 dxp-support-mcp = "dxp_support_mcp.mcp_server:main"
 dxp-support-chat = "dxp_support_mcp.cli:main"
+dxp-support-api = "dxp_support_mcp.chat_api:main"
+dxp-support-ui = "dxp_support_mcp.chat_ui:main"
 
 [build-system]
 requires = ["setuptools>=68"]

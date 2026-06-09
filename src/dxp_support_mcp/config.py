@@ -16,11 +16,19 @@ class AppConfig:
     """Default dealer CDH account id(s) for dxp-Account-Ids header (comma-separated)."""
     account_ids: str | None
     strict_writes: bool
-    openai_api_key: str | None
-    openai_base_url: str
-    openai_model: str
     knowledge_dir: Path
     rag_top_k: int
+    trimble_model_gateway_url: str
+    trimble_model: str
+    trimble_max_tokens: int
+    tid_token_url: str
+    tid_client_id: str | None
+    tid_client_secret: str | None
+    tid_scope: str
+    tid_token: str | None
+    chat_api_host: str
+    chat_api_port: int
+    max_tool_rounds: int
 
 
 def load_config() -> AppConfig:
@@ -38,9 +46,21 @@ def load_config() -> AppConfig:
         bearer_token=os.getenv("DXP_BEARER_TOKEN", "").strip(),
         account_ids=account_ids,
         strict_writes=os.getenv("MCP_STRICT_WRITES", "true").lower() != "false",
-        openai_api_key=os.getenv("OPENAI_API_KEY") or None,
-        openai_base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
-        openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
         knowledge_dir=knowledge_dir,
         rag_top_k=max(1, int(os.getenv("RAG_TOP_K", "5"))),
+        trimble_model_gateway_url=os.getenv(
+            "TRIMBLE_MODEL_GATEWAY_URL", "https://models.dev.trimble-ai.com"
+        ).rstrip("/"),
+        trimble_model=os.getenv("TRIMBLE_MODEL", "claude-4.5-sonnet"),
+        trimble_max_tokens=int(os.getenv("TRIMBLE_MAX_TOKENS", "4096")),
+        tid_token_url=os.getenv(
+            "TID_TOKEN_URL", "https://stage.id.trimblecloud.com/oauth/token"
+        ).rstrip("/"),
+        tid_client_id=os.getenv("TID_CLIENT_ID") or None,
+        tid_client_secret=os.getenv("TID_CLIENT_SECRET") or None,
+        tid_scope=os.getenv("TID_SCOPE", "openid models profile"),
+        tid_token=os.getenv("TID_TOKEN") or None,
+        chat_api_host=os.getenv("CHAT_API_HOST", "0.0.0.0"),
+        chat_api_port=int(os.getenv("CHAT_API_PORT", "8080")),
+        max_tool_rounds=int(os.getenv("MAX_TOOL_ROUNDS", "8")),
     )

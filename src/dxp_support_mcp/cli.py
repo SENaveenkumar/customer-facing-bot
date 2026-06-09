@@ -52,8 +52,15 @@ def main() -> None:
         return
 
     print("DXP Support Chat (exit to quit, help for commands)\n")
-    if not config.openai_api_key:
-        print("Tip: set OPENAI_API_KEY for AI chat, or: python -m dxp_support_mcp.cli tool ...\n")
+    has_inference = bool(
+        config.tid_token
+        or (config.tid_client_id and config.tid_client_secret)
+    )
+    if not has_inference:
+        print(
+            "Tip: set TID_TOKEN or TID_CLIENT_ID + TID_CLIENT_SECRET "
+            "for AI chat, or: python -m dxp_support_mcp.cli tool ...\n"
+        )
 
     while True:
         try:
@@ -68,7 +75,7 @@ def main() -> None:
         if line == "help":
             print(
                 "Commands:\n"
-                "  Natural language (needs OPENAI_API_KEY)\n"
+                "  Natural language (needs Trimble TID credentials)\n"
                 "  tool lookup <dealerAccountId> <customerAccountId>\n"
                 "  tool contract <contractId>\n"
                 "  tool list <accountId>\n"
