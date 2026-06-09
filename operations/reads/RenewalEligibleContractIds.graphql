@@ -1,3 +1,0 @@
-query RenewalEligibleContractIds($accountId: ID!) {
-  renewalEligibleContractIds(accountId: $accountId)
-}

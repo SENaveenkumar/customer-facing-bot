@@ -27,11 +27,7 @@ from dxp_support_mcp.tools.smart_contract import (
     create_contract_smart,
     prepare_contract_input,
 )
-from dxp_support_mcp.tools.support_bot import (
-    renewal_eligible_contract_ids,
-    support_bot_sql_read,
-    support_bot_sql_template,
-)
+from dxp_support_mcp.tools.explain_contract import explain_contract, get_contract_briefing
 
 config = load_config()
 registry = OperationRegistry.load(PROJECT_ROOT)
@@ -41,7 +37,8 @@ mcp = FastMCP(
     name="dxp-support",
     instructions=(
         "DXP dealer support assistant. Use lookup_customer_context before creating contracts. "
-        "Mutations require confirmed=true when strict writes are enabled."
+        "For contract errors, status, renewal, or next-step questions use explain_contract_tool "
+        "with the contract id. Mutations require confirmed=true when strict writes are enabled."
     ),
 )
 
@@ -102,36 +99,6 @@ def lookup_customer_context_tool(
 
 
 @mcp.tool()
-def support_bot_sql_read_tool(
-    account_id: str,
-    sql: str,
-    max_rows: int = 100,
-) -> str:
-    """Run read-only SQL on DXP (SELECT only; must include :account_id). Returns parsed rows."""
-    return _handle(support_bot_sql_read)(
-        client, registry, account_id, sql, max_rows
-    )
-
-
-@mcp.tool()
-def support_bot_sql_template_tool(
-    account_id: str,
-    template_name: str,
-    max_rows: int = 100,
-) -> str:
-    """Run SQL from operations/sql/{template_name}.sql (e.g. renewal_eligible_contracts, last_contract)."""
-    return _handle(support_bot_sql_template)(
-        client, registry, account_id, template_name, max_rows
-    )
-
-
-@mcp.tool()
-def renewal_eligible_contract_ids_tool(account_id: str) -> str:
-    """Return contract GUIDs eligible for renewal for this dealer account."""
-    return _handle(renewal_eligible_contract_ids)(client, registry, account_id)
-
-
-@mcp.tool()
 def prepare_contract_input_tool(
     account_id: str,
     user_input: dict[str, Any] | None = None,
@@ -179,6 +146,42 @@ def submit_contract_tool(
 def explain_last_error_tool() -> str:
     """Explain the most recent GraphQL error with support hints."""
     return explain_last_error(client)
+
+
+@mcp.tool()
+def explain_contract_tool(contract_id: str, question: str | None = None) -> str:
+    """Answer any contract support question using live GraphQL facts + RAG knowledge.
+
+    Combines contract data (status, errorReason, renewalDate, eligibility) with knowledge chunks.
+    Works for errors, next steps, renewal/amendment eligibility, discounts, device transfer, etc.
+    Examples: 'Why is there an error?', 'What should I do next?', 'Why not eligible for renewal?'
+    """
+    return _handle(explain_contract)(client, registry, config, contract_id, question)
+
+
+@mcp.tool()
+def get_contract_briefing_tool(contract_id: str) -> str:
+    """Full contract support briefing: status, dates, eligibility, blockers, and recommended actions."""
+    return _handle(get_contract_briefing)(client, registry, config, contract_id)
+
+
+@mcp.tool()
+def search_knowledge_tool(query: str, top_k: int = 5) -> str:
+    """Search RAG knowledge chunks without calling GraphQL (debug / general DXP questions)."""
+    from dxp_support_mcp.support.rag_retriever import KnowledgeIndex
+
+    index = KnowledgeIndex(config.knowledge_dir)
+    chunks = index.retrieve(query, context_tags=set(), top_k=min(top_k, 10))
+    return _json_result(
+        {
+            "query": query,
+            "chunksLoaded": len(index.chunks()),
+            "results": [
+                {"id": c.id, "title": c.title, "tags": list(c.tags), "excerpt": c.content[:400]}
+                for c in chunks
+            ],
+        }
+    )
 
 
 def main() -> None:

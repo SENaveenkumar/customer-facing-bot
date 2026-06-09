@@ -19,6 +19,7 @@ from dxp_support_mcp.tools.contracts import (
     list_contracts,
     lookup_customer_context,
 )
+from dxp_support_mcp.tools.explain_contract import explain_contract, get_contract_briefing
 from dxp_support_mcp.tools.dxp_read import dxp_read
 
 
@@ -93,6 +94,21 @@ class SupportOrchestrator:
                 )
             if name == "explain_last_error_tool":
                 return explain_last_error(self._client)
+            if name == "explain_contract_tool":
+                return explain_contract(
+                    self._client,
+                    self._registry,
+                    self._config,
+                    args["contract_id"],
+                    args.get("question"),
+                )
+            if name == "get_contract_briefing_tool":
+                return get_contract_briefing(
+                    self._client,
+                    self._registry,
+                    self._config,
+                    args["contract_id"],
+                )
             return json.dumps({"error": f"Unknown tool: {name}"})
         except Exception as exc:
             return json.dumps({"error": str(exc)})

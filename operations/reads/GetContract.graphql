@@ -3,6 +3,10 @@ query GetContract($id: ID!) {
     id
     contractNumber
     status
+    statusChangeReason
+    type
+    approvalStatus
+    errorReason
     autoRenew
     startDate
     renewalDate
@@ -50,6 +54,7 @@ query GetContract($id: ID!) {
       id
       status
       validUntilDate
+      approvalStatus
     }
   }
 }

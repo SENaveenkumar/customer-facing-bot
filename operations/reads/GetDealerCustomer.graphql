@@ -5,8 +5,18 @@ query GetDealerCustomer($dealerAccountId: ID!, $customerAccountId: ID!) {
   ) {
     id
     companyName
-    customerNumber
-    address {
+    addresses {
+      id
+      address1
+      city
+    }
+    defaultShipToContact {
+      id
+      firstName
+      lastName
+      email
+    }
+    defaultShipToAddress {
       id
       address1
       city

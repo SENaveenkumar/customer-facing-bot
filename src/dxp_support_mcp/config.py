@@ -1,7 +1,10 @@
 import os
 from dataclasses import dataclass
+from pathlib import Path
 
 from dotenv import load_dotenv
+
+from dxp_support_mcp.paths import PROJECT_ROOT
 
 load_dotenv()
 
@@ -16,6 +19,8 @@ class AppConfig:
     openai_api_key: str | None
     openai_base_url: str
     openai_model: str
+    knowledge_dir: Path
+    rag_top_k: int
 
 
 def load_config() -> AppConfig:
@@ -24,6 +29,9 @@ def load_config() -> AppConfig:
         raise ValueError("DXP_GRAPHQL_URL is required")
 
     account_ids = os.getenv("DXP_ACCOUNT_IDS", "").strip() or None
+    knowledge_dir = Path(
+        os.getenv("KNOWLEDGE_DIR", str(PROJECT_ROOT / "knowledge" / "chunks"))
+    ).resolve()
 
     return AppConfig(
         graphql_url=graphql_url,
@@ -33,4 +41,6 @@ def load_config() -> AppConfig:
         openai_api_key=os.getenv("OPENAI_API_KEY") or None,
         openai_base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
         openai_model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
+        knowledge_dir=knowledge_dir,
+        rag_top_k=max(1, int(os.getenv("RAG_TOP_K", "5"))),
     )

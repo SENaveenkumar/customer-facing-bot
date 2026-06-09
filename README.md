@@ -57,9 +57,6 @@ Add to Cursor MCP settings (see `mcp-config.example.json`):
 | Tool | Description |
 |------|-------------|
 | `dxp_read_tool` | Generic allowlisted read (`GetContract`, `ListContracts`, …) |
-| `support_bot_sql_read_tool` | Run read-only SQL via DXP `supportBotRead` (`:account_id` required) |
-| `support_bot_sql_template_tool` | Run SQL from `operations/sql/*.sql` |
-| `renewal_eligible_contract_ids_tool` | Contract GUIDs eligible for renewal |
 | `prepare_contract_input_tool` | Build `CreateQuoteInput` from user input or last contract |
 | `create_contract_smart_tool` | Create draft using user input or last-contract defaults |
 | `get_contract_tool` | Contract by ID |
@@ -68,8 +65,26 @@ Add to Cursor MCP settings (see `mcp-config.example.json`):
 | `create_draft_contract_tool` | `createDraftContract` mutation |
 | `submit_contract_tool` | `convertContract` mutation |
 | `explain_last_error_tool` | Hints from last GraphQL error |
+| `explain_contract_tool` | RAG + live contract facts — any support question by contract id |
+| `get_contract_briefing_tool` | Full briefing (status, eligibility, blockers, next steps) |
+| `search_knowledge_tool` | Search knowledge chunks without GraphQL |
 
 When `MCP_STRICT_WRITES=true`, mutations require `confirmed=true` after user review.
+
+## RAG contract explanations
+
+`explain_contract_tool` and `get_contract_briefing_tool` combine live GraphQL data with knowledge under `knowledge/chunks/`.
+
+```bash
+# Generate knowledge base (first time)
+python knowledge/generate_kb.py
+
+# Ask about a contract (rule-based without OPENAI_API_KEY; richer with it)
+python -m dxp_support_mcp.cli tool explain_contract_tool "{\"contract_id\":\"<guid>\",\"question\":\"Why not eligible for renewal?\"}"
+python -m dxp_support_mcp.cli tool get_contract_briefing_tool "{\"contract_id\":\"<guid>\"}"
+```
+
+Optional env: `KNOWLEDGE_DIR`, `RAG_TOP_K`, `OPENAI_API_KEY`.
 
 ## Local chat CLI
 
@@ -87,7 +102,12 @@ python -m dxp_support_mcp.cli tool list <accountId>
 
 ```
 dxp-support-mcp/
-├── src/dxp_support_mcp/    # Python package
+├── src/dxp_support_mcp/
+│   ├── support/            # RAG pipeline (context, intent, retriever, synthesizer)
+│   └── tools/              # MCP tool implementations
+├── knowledge/
+│   ├── generate_kb.py      # Build chunks from DXP domain knowledge
+│   └── chunks/             # Markdown RAG chunks (run generate_kb.py)
 ├── operations/
 │   ├── reads/              # Allowlisted queries
 │   └── writes/             # Mutations (tool-only)
