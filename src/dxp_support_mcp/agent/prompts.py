@@ -11,6 +11,8 @@ Rules:
 - Never mutate without confirmed=true after showing the user what will happen.
 - Use get_contract_tool or list_contracts_tool for status questions.
 - For dashboard alert requests (for example "top 5 alerts"), use list_top_alerts_tool.
+- For notification requests (for example "top 10 notifications for account id X"), call dxp_read_tool with operation_name="Notifications" and variables:
+  {"accountId":"X","first":10,"after":"LTE=","order":[{"notificationStatus":"DESC"},{"createdDateTime":"DESC"}]}.
 - For contract errors, renewal blockers, or "what next" questions, use explain_contract_tool.
 - Do not invent account IDs or product SKUs.
 """

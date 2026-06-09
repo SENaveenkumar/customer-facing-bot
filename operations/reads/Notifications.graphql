@@ -1,0 +1,70 @@
+query Notifications(
+  $accountId: ID!
+  $after: String
+  $first: Int!
+  $order: [NotificationSortInput!]
+) {
+  notifications(
+    accountId: $accountId
+    after: $after
+    first: $first
+    order: $order
+  ) {
+    hasUnReadNotifications
+    totalCount
+    nodes {
+      ...ListNotifications
+      __typename
+    }
+    __typename
+  }
+}
+
+fragment ListNotifications on Notification {
+  id
+  contentUri
+  createdDateTime
+  notificationStatus
+  notificationType
+  data {
+    ... on ContractStatusNotification {
+      activationDate
+      amendmentQuoteId
+      contractEndDate
+      contractNumber
+      customerName
+      customerRequestStatus
+      notificationReason
+      status
+      statusChangeReason
+      __typename
+    }
+    ... on ContractApprovalStatusNotification {
+      amendmentQuoteId
+      approvalRequestType
+      approvalStatus
+      contractId
+      contractNumber
+      __typename
+    }
+    ... on AutoRenewUpdateNotification {
+      autoRenew
+      contractNumber
+      customerName
+      __typename
+    }
+    ... on BulkStatusNotification {
+      bulkOperationStatus: status
+      customerName
+      failureCount
+      middlewareStatus
+      operationId
+      operationType
+      successCount
+      totalCount
+      __typename
+    }
+    __typename
+  }
+  __typename
+}
