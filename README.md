@@ -61,6 +61,7 @@ Add to Cursor MCP settings (see `mcp-config.example.json`):
 | `create_contract_smart_tool` | Create draft using user input or last-contract defaults |
 | `get_contract_tool` | Contract by ID |
 | `list_contracts_tool` | `contractsV2` for dealer account |
+| `list_products_by_account_tool` | Products for a dealer account (`products`) |
 | `lookup_customer_context_tool` | Account + customer + products for drafting |
 | `create_draft_contract_tool` | `createDraftContract` mutation |
 | `submit_contract_tool` | `convertContract` mutation |
