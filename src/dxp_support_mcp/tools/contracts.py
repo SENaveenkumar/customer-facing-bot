@@ -49,6 +49,7 @@ def lookup_customer_context(
     customer_account_id: str,
     term_uom: Literal["MONTH", "YEAR"] = "YEAR",
 ) -> dict[str, Any]:
+    warnings: list[str] = []
     account = dxp_read(
         client,
         registry,
@@ -56,15 +57,26 @@ def lookup_customer_context(
         {"id": dealer_account_id},
         dealer_account_id=dealer_account_id,
     )
-    customer = dxp_read(
-        client,
-        registry,
-        "GetDealerCustomer",
-        {
-            "dealerAccountId": dealer_account_id,
-            "customerAccountId": customer_account_id,
-        },
-    )
+    customer: Any = None
+    try:
+        customer = dxp_read(
+            client,
+            registry,
+            "GetDealerCustomer",
+            {
+                "dealerAccountId": dealer_account_id,
+                "customerAccountId": customer_account_id,
+            },
+        )
+    except Exception as exc:
+        warnings.append(
+            "Unable to load customer context. Check customer account access/ownership."
+        )
+        customer = {
+            "id": customer_account_id,
+            "error": str(exc),
+            "authorized": False,
+        }
     products = dxp_read(
         client,
         registry,
@@ -75,7 +87,12 @@ def lookup_customer_context(
             "contractType": "NEW",
         },
     )
-    return {"account": account, "customer": customer, "products": products}
+    return {
+        "account": account,
+        "customer": customer,
+        "products": products,
+        "warnings": warnings,
+    }
 
 
 def list_top_dealer_dashboard_alerts(

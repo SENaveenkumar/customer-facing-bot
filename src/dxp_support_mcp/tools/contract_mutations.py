@@ -7,6 +7,7 @@ from dxp_support_mcp.config import AppConfig
 from dxp_support_mcp.graphql.allowlist import OperationRegistry
 from dxp_support_mcp.graphql.client import GraphQLClient
 from dxp_support_mcp import state
+from dxp_support_mcp.tools.support_bot import normalize_create_quote_input
 
 
 def _require_confirmation(
@@ -43,13 +44,14 @@ def create_draft_contract(
     input_data: dict[str, Any],
     confirmed: bool = False,
 ) -> str:
+    normalized_input = normalize_create_quote_input(input_data)
     summary = (
-        f"Create draft contract for customer {input_data.get('customerAccountId')} "
-        f"with {len(input_data.get('quoteLines', []))} line(s), "
-        f"term {input_data.get('termQuantity')} {input_data.get('termUOM')}"
+        f"Create draft contract for customer {normalized_input.get('customerAccountId')} "
+        f"with {len(normalized_input.get('quoteLines', []))} line(s), "
+        f"term {normalized_input.get('termQuantity')} {normalized_input.get('termUOM')}"
     )
     blocked = _require_confirmation(
-        config, confirmed, "create_draft_contract", summary, {"input": input_data}
+        config, confirmed, "create_draft_contract", summary, {"input": normalized_input}
     )
     if blocked:
         return blocked
@@ -57,9 +59,9 @@ def create_draft_contract(
     op = registry.get_write("CreateDraftContract")
     data = client.execute(
         op.document,
-        {"input": input_data},
+        {"input": normalized_input},
         "CreateDraftContract",
-        account_ids=input_data.get("billToAccountId"),
+        account_ids=normalized_input.get("billToAccountId"),
     )
     return json.dumps(data.get("createDraftContract"), indent=2)
 

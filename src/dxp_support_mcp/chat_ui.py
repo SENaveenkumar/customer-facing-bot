@@ -75,7 +75,7 @@ def _build_ui() -> gr.Blocks:
             fn=_chat_via_api if _use_api else _chat_direct,
             examples=[
                 "Want to create a new draft contract?",
-                "Show eligible products for my dealer account (YEAR) so I can pick quantity",
+                "Show 5 important updates or alerts from my dealer dashboard",
             ],
         )
 

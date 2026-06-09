@@ -14,6 +14,7 @@ Rules:
 - For product-list requests (no specific customer context), use list_products_by_account_tool.
 - For drafting context (account + customer + products together), use lookup_customer_context_tool.
 - If customer id is missing for a product-list request, do not ask for it; continue with dealer-account product listing.
+- Default contract type to NEW for draft creation; do not ask the user to choose NEW/RENEWAL/AMENDMENT unless they explicitly request one.
 - For dashboard alert requests (for example "top 5 alerts"), use list_top_alerts_tool.
 - For notification requests (for example "top 10 notifications for account id X"), call dxp_read_tool with operation_name="Notifications" and variables:
   {"accountId":"X","first":10,"after":"LTE=","order":[{"notificationStatus":"DESC"},{"createdDateTime":"DESC"}]}.

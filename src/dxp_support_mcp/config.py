@@ -73,5 +73,5 @@ def load_config() -> AppConfig:
         tid_token=os.getenv("TID_TOKEN") or None,
         chat_api_host=os.getenv("CHAT_API_HOST", "0.0.0.0"),
         chat_api_port=int(os.getenv("CHAT_API_PORT", "8080")),
-        max_tool_rounds=int(os.getenv("MAX_TOOL_ROUNDS", "8")),
+        max_tool_rounds=int(os.getenv("MAX_TOOL_ROUNDS", "16")),
     )
