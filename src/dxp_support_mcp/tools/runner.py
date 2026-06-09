@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from typing import Any
 
 from dxp_support_mcp import state
@@ -25,6 +26,8 @@ from dxp_support_mcp.tools.smart_contract import (
     prepare_contract_input,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def _json_result(value: Any) -> str:
     if isinstance(value, str):
@@ -41,8 +44,9 @@ def run_tool(
     registry: OperationRegistry,
 ) -> str:
     try:
+        logger.debug("runner.dispatch name=%s args_keys=%s", name, sorted(args.keys()))
         if name == "dxp_read_tool":
-            return _json_result(
+            result = _json_result(
                 dxp_read(
                     client,
                     registry,
@@ -50,12 +54,16 @@ def run_tool(
                     args.get("variables"),
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "get_contract_tool":
-            return _json_result(
+            result = _json_result(
                 get_contract(client, registry, args["contract_id"])
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "list_contracts_tool":
-            return _json_result(
+            result = _json_result(
                 list_contracts(
                     client,
                     registry,
@@ -63,11 +71,13 @@ def run_tool(
                     args.get("first", 10),
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "lookup_customer_context_tool":
             term = args.get("term_uom", "YEAR")
             if term not in ("MONTH", "YEAR"):
                 term = "YEAR"
-            return _json_result(
+            result = _json_result(
                 lookup_customer_context(
                     client,
                     registry,
@@ -76,8 +86,10 @@ def run_tool(
                     term,
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "prepare_contract_input_tool":
-            return _json_result(
+            result = _json_result(
                 prepare_contract_input(
                     client,
                     registry,
@@ -85,8 +97,10 @@ def run_tool(
                     args.get("user_input"),
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "create_contract_smart_tool":
-            return _json_result(
+            result = _json_result(
                 create_contract_smart(
                     client,
                     registry,
@@ -96,16 +110,20 @@ def run_tool(
                     args.get("confirmed", False),
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "create_draft_contract_tool":
-            return create_draft_contract(
+            result = create_draft_contract(
                 client,
                 registry,
                 config,
                 args["input"],
                 args.get("confirmed", False),
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "submit_contract_tool":
-            return submit_contract(
+            result = submit_contract(
                 client,
                 registry,
                 config,
@@ -113,10 +131,14 @@ def run_tool(
                 args.get("purchase_order_number"),
                 args.get("confirmed", False),
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "explain_last_error_tool":
-            return explain_last_error(client)
+            result = explain_last_error(client)
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "explain_contract_tool":
-            return _json_result(
+            result = _json_result(
                 explain_contract(
                     client,
                     registry,
@@ -125,8 +147,10 @@ def run_tool(
                     args.get("question"),
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "get_contract_briefing_tool":
-            return _json_result(
+            result = _json_result(
                 get_contract_briefing(
                     client,
                     registry,
@@ -134,11 +158,13 @@ def run_tool(
                     args["contract_id"],
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "search_knowledge_tool":
             top_k = min(int(args.get("top_k", 5)), 10)
             index = KnowledgeIndex(config)
             chunks = index.retrieve(args["query"], context_tags=set(), top_k=top_k)
-            return _json_result(
+            result = _json_result(
                 {
                     "query": args["query"],
                     "chunksLoaded": len(index.chunks()),
@@ -153,7 +179,11 @@ def run_tool(
                     ],
                 }
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
+        logger.warning("runner.unknown_tool name=%s", name)
         return json.dumps({"error": f"Unknown tool: {name}"})
     except Exception as exc:
         state.session_state["last_errors"] = client.get_last_errors()
+        logger.exception("runner.error name=%s", name)
         return json.dumps({"error": str(exc)})
