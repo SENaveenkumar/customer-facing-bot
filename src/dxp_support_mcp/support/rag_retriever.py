@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -11,6 +12,7 @@ from dxp_support_mcp.config import AppConfig
 
 _FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)", re.DOTALL)
 _TAG_LIST = re.compile(r"\[(.*?)\]")
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -111,21 +113,33 @@ class KnowledgeIndex:
 
         candidate_chunks = all_chunks
         if question and self._vector.enabled:
+            logger.debug("rag.vector.search query_chars=%d top_n=%d", len(question), max(top_k, self._config.rag_vector_top_n))
             vector_ids = self._vector.search(
                 question,
                 top_n=max(top_k, self._config.rag_vector_top_n),
             )
             if vector_ids:
+                logger.debug("rag.vector.candidates count=%d", len(vector_ids))
                 candidate_chunks = [
                     self._chunk_by_id[cid]
                     for cid in vector_ids
                     if cid in self._chunk_by_id
                 ]
+            else:
+                logger.debug("rag.vector.no_candidates using_keyword_ranking=true")
+        elif question:
+            logger.debug("rag.vector.disabled using_keyword_ranking=true")
 
         ranked = sorted(
             candidate_chunks,
             key=lambda c: c.score(question, context_tags, words),
             reverse=True,
+        )
+        logger.debug(
+            "rag.retrieve.done chunks_total=%d candidates=%d selected=%d",
+            len(all_chunks),
+            len(candidate_chunks),
+            min(top_k, len(ranked)),
         )
         return ranked[:top_k]
 
@@ -143,13 +157,24 @@ class KnowledgeIndex:
     def _ensure_vector_index(self) -> None:
         chunks = self.chunks()
         if not chunks or not self._vector.enabled:
+            if not chunks:
+                logger.warning("rag.index.skip reason=no_chunks knowledge_dir=%s", self._dir)
+            elif not self._vector.enabled:
+                logger.warning("rag.index.skip reason=vector_disabled")
             return
 
         signature = _build_knowledge_signature(self._dir)
         cached_signature = self._read_manifest_signature()
         if cached_signature == signature and self._vector.collection_exists("knowledge"):
+            logger.debug("rag.index.reuse signature=%s", signature[:12])
             return
 
+        logger.info(
+            "rag.index.rebuild chunks=%d signature=%s db_dir=%s",
+            len(chunks),
+            signature[:12],
+            self._db_dir,
+        )
         self._vector.rebuild("knowledge", chunks)
         self._write_manifest_signature(signature)
 
@@ -192,8 +217,10 @@ class _VectorStore:
                 model_name=self._embedding_model
             )
             self.enabled = True
+            logger.info("rag.vector.enabled model=%s db_dir=%s", self._embedding_model, self._db_dir)
         except Exception:
             self.enabled = False
+            logger.exception("rag.vector.disabled init_failed=true")
 
     def collection_exists(self, collection_name: str) -> bool:
         if not self.enabled or self._client is None:

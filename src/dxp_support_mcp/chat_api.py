@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from typing import Any
 
@@ -12,7 +13,11 @@ from dxp_support_mcp.agent.orchestrator import SupportOrchestrator
 from dxp_support_mcp.config import load_config
 from dxp_support_mcp.graphql.allowlist import OperationRegistry
 from dxp_support_mcp.graphql.client import GraphQLClient
+from dxp_support_mcp.logging_utils import configure_logging
 from dxp_support_mcp.paths import PROJECT_ROOT
+
+configure_logging()
+logger = logging.getLogger(__name__)
 
 config = load_config()
 registry = OperationRegistry.load(PROJECT_ROOT)
@@ -23,11 +28,13 @@ _sessions: dict[str, SupportOrchestrator] = {}
 
 def _get_or_create_session(session_id: str | None) -> tuple[str, SupportOrchestrator]:
     if session_id and session_id in _sessions:
+        logger.debug("session.reuse id=%s", session_id)
         return session_id, _sessions[session_id]
 
     new_id = session_id or str(uuid.uuid4())
     orch = SupportOrchestrator(config, graphql_client, registry, session_id=new_id)
     _sessions[new_id] = orch
+    logger.info("session.create id=%s", new_id)
     return new_id, orch
 
 
@@ -97,8 +104,11 @@ def reset_session(session_id: str) -> dict[str, str]:
 def chat(request: ChatRequest) -> ChatResponse:
     try:
         session_id, orch = _get_or_create_session(request.session_id)
+        logger.info("chat.request session_id=%s message_chars=%d", session_id, len(request.message))
         reply = orch.chat(request.message)
+        logger.info("chat.reply session_id=%s reply_chars=%d", session_id, len(reply))
     except Exception as exc:
+        logger.exception("chat.error session_id=%s", request.session_id)
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
     return ChatResponse(
@@ -115,9 +125,11 @@ def chat_completions_proxy(body: dict[str, Any]) -> dict[str, Any]:
     from dxp_support_mcp.auth.trimble_id import TrimbleIdTokenProvider
 
     try:
+        logger.info("chat.proxy.request keys=%s", sorted(body.keys()))
         gateway = ModelGatewayClient(config, TrimbleIdTokenProvider(config))
         return gateway.create_chat_completion(body)
     except Exception as exc:
+        logger.exception("chat.proxy.error")
         raise HTTPException(status_code=502, detail=str(exc)) from exc
 
 
