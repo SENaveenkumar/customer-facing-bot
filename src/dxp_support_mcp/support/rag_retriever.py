@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import hashlib
+import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from dxp_support_mcp.config import AppConfig
 
 _FRONTMATTER = re.compile(r"^---\s*\n(.*?)\n---\s*\n(.*)", re.DOTALL)
 _TAG_LIST = re.compile(r"\[(.*?)\]")
@@ -60,9 +64,14 @@ class KnowledgeChunk:
 
 
 class KnowledgeIndex:
-    def __init__(self, knowledge_dir: Path) -> None:
-        self._dir = knowledge_dir
+    def __init__(self, config: AppConfig) -> None:
+        self._config = config
+        self._dir = config.knowledge_dir
+        self._db_dir = config.rag_vector_db_dir
+        self._manifest_path = self._db_dir / "knowledge_manifest.json"
         self._chunks: list[KnowledgeChunk] | None = None
+        self._chunk_by_id: dict[str, KnowledgeChunk] = {}
+        self._vector = _VectorStore(config.rag_embedding_model, self._db_dir)
 
     def reload(self) -> None:
         self._chunks = None
@@ -70,6 +79,7 @@ class KnowledgeIndex:
     def chunks(self) -> list[KnowledgeChunk]:
         if self._chunks is None:
             self._chunks = self._load_all()
+            self._chunk_by_id = {chunk.id: chunk for chunk in self._chunks}
         return self._chunks
 
     def retrieve(
@@ -82,11 +92,38 @@ class KnowledgeIndex:
         if not all_chunks:
             return []
 
+        self._ensure_vector_index()
+
         words = set(re.findall(r"[a-z0-9]+", (question or "").lower()))
-        words -= {"a", "an", "the", "is", "why", "what", "how", "this", "my", "for", "to"}
+        words -= {
+            "a",
+            "an",
+            "the",
+            "is",
+            "why",
+            "what",
+            "how",
+            "this",
+            "my",
+            "for",
+            "to",
+        }
+
+        candidate_chunks = all_chunks
+        if question and self._vector.enabled:
+            vector_ids = self._vector.search(
+                question,
+                top_n=max(top_k, self._config.rag_vector_top_n),
+            )
+            if vector_ids:
+                candidate_chunks = [
+                    self._chunk_by_id[cid]
+                    for cid in vector_ids
+                    if cid in self._chunk_by_id
+                ]
 
         ranked = sorted(
-            all_chunks,
+            candidate_chunks,
             key=lambda c: c.score(question, context_tags, words),
             reverse=True,
         )
@@ -102,6 +139,114 @@ class KnowledgeIndex:
             if chunk:
                 loaded.append(chunk)
         return loaded
+
+    def _ensure_vector_index(self) -> None:
+        chunks = self.chunks()
+        if not chunks or not self._vector.enabled:
+            return
+
+        signature = _build_knowledge_signature(self._dir)
+        cached_signature = self._read_manifest_signature()
+        if cached_signature == signature and self._vector.collection_exists("knowledge"):
+            return
+
+        self._vector.rebuild("knowledge", chunks)
+        self._write_manifest_signature(signature)
+
+    def _read_manifest_signature(self) -> str | None:
+        if not self._manifest_path.exists():
+            return None
+        try:
+            body = json.loads(self._manifest_path.read_text(encoding="utf-8"))
+            return str(body.get("signature") or "")
+        except Exception:
+            return None
+
+    def _write_manifest_signature(self, signature: str) -> None:
+        self._db_dir.mkdir(parents=True, exist_ok=True)
+        self._manifest_path.write_text(
+            json.dumps({"signature": signature}, indent=2),
+            encoding="utf-8",
+        )
+
+
+class _VectorStore:
+    def __init__(self, embedding_model: str, db_dir: Path) -> None:
+        self.enabled = False
+        self._client = None
+        self._embedding_fn = None
+        self._embedding_model = embedding_model
+        self._db_dir = db_dir
+        self._init()
+
+    def _init(self) -> None:
+        try:
+            import chromadb
+            from chromadb.utils.embedding_functions import (
+                SentenceTransformerEmbeddingFunction,
+            )
+
+            self._db_dir.mkdir(parents=True, exist_ok=True)
+            self._client = chromadb.PersistentClient(path=str(self._db_dir))
+            self._embedding_fn = SentenceTransformerEmbeddingFunction(
+                model_name=self._embedding_model
+            )
+            self.enabled = True
+        except Exception:
+            self.enabled = False
+
+    def collection_exists(self, collection_name: str) -> bool:
+        if not self.enabled or self._client is None:
+            return False
+        return any(c.name == collection_name for c in self._client.list_collections())
+
+    def rebuild(self, collection_name: str, chunks: list[KnowledgeChunk]) -> None:
+        if not self.enabled or self._client is None or self._embedding_fn is None:
+            return
+        if self.collection_exists(collection_name):
+            self._client.delete_collection(collection_name)
+        collection = self._client.get_or_create_collection(
+            collection_name,
+            embedding_function=self._embedding_fn,
+        )
+        collection.add(
+            ids=[chunk.id for chunk in chunks],
+            documents=[f"{chunk.title}\n\n{chunk.content}" for chunk in chunks],
+            metadatas=[
+                {
+                    "title": chunk.title,
+                    "category": chunk.category,
+                    "path": chunk.path,
+                    "tags": ",".join(chunk.tags),
+                }
+                for chunk in chunks
+            ],
+        )
+
+    def search(self, query: str, top_n: int) -> list[str]:
+        if not self.enabled or self._client is None or self._embedding_fn is None:
+            return []
+        collection = self._client.get_or_create_collection(
+            "knowledge",
+            embedding_function=self._embedding_fn,
+        )
+        result = collection.query(query_texts=[query], n_results=max(1, top_n))
+        ids: list[str] = []
+        for candidate_ids in result.get("ids") or []:
+            for chunk_id in candidate_ids or []:
+                if chunk_id:
+                    ids.append(str(chunk_id))
+        return ids
+
+
+def _build_knowledge_signature(knowledge_dir: Path) -> str:
+    digest = hashlib.sha256()
+    for path in sorted(knowledge_dir.rglob("*.md")):
+        stat = path.stat()
+        digest.update(str(path.relative_to(knowledge_dir)).encode("utf-8"))
+        digest.update(str(int(stat.st_mtime)).encode("utf-8"))
+        digest.update(str(stat.st_size).encode("utf-8"))
+    return digest.hexdigest()
 
 
 def _parse_chunk(path: Path) -> KnowledgeChunk | None:

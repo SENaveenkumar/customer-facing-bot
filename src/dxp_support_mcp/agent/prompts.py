@@ -11,7 +11,6 @@ Rules:
 - Never mutate without confirmed=true after showing the user what will happen.
 - Use get_contract_tool or list_contracts_tool for status questions.
 - For contract errors, renewal blockers, or "what next" questions, use explain_contract_tool.
-- Use support_bot_sql_read_tool or support_bot_sql_template_tool for data lookups.
 - Do not invent account IDs or product SKUs.
 """
 
@@ -71,50 +70,6 @@ TOOL_DEFINITIONS = [
                     "term_uom": {"type": "string", "enum": ["MONTH", "YEAR"]},
                 },
                 "required": ["dealer_account_id", "customer_account_id"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "support_bot_sql_read_tool",
-            "description": "Run read-only SQL via supportBotRead (must include :account_id)",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "account_id": {"type": "string"},
-                    "sql": {"type": "string"},
-                    "max_rows": {"type": "integer"},
-                },
-                "required": ["account_id", "sql"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "support_bot_sql_template_tool",
-            "description": "Run SQL from operations/sql/{template_name}.sql",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "account_id": {"type": "string"},
-                    "template_name": {"type": "string"},
-                    "max_rows": {"type": "integer"},
-                },
-                "required": ["account_id", "template_name"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "renewal_eligible_contract_ids_tool",
-            "description": "Return contract GUIDs eligible for renewal",
-            "parameters": {
-                "type": "object",
-                "properties": {"account_id": {"type": "string"}},
-                "required": ["account_id"],
             },
         },
     },

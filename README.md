@@ -86,7 +86,7 @@ python -m dxp_support_mcp.cli tool explain_contract_tool "{\"contract_id\":\"<gu
 python -m dxp_support_mcp.cli tool get_contract_briefing_tool "{\"contract_id\":\"<guid>\"}"
 ```
 
-Optional env: `KNOWLEDGE_DIR`, `RAG_TOP_K`, `OPENAI_API_KEY`.
+Optional env: `KNOWLEDGE_DIR`, `RAG_TOP_K`, `RAG_VECTOR_TOP_N`, `RAG_VECTOR_DB_DIR`, `RAG_EMBEDDING_MODEL`.
 ## Chat API (Trimble Model Gateway)
 
 Uses [Trimble Model Gateway](https://developer.ai.trimble.com/api/models-inference/) with `claude-4.5-sonnet`, TID OAuth, and local MCP tool execution.

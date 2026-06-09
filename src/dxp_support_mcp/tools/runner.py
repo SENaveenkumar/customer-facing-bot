@@ -24,11 +24,6 @@ from dxp_support_mcp.tools.smart_contract import (
     create_contract_smart,
     prepare_contract_input,
 )
-from dxp_support_mcp.tools.support_bot import (
-    renewal_eligible_contract_ids,
-    support_bot_sql_read,
-    support_bot_sql_template,
-)
 
 
 def _json_result(value: Any) -> str:
@@ -79,32 +74,6 @@ def run_tool(
                     args["dealer_account_id"],
                     args["customer_account_id"],
                     term,
-                )
-            )
-        if name == "support_bot_sql_read_tool":
-            return _json_result(
-                support_bot_sql_read(
-                    client,
-                    registry,
-                    args["account_id"],
-                    args["sql"],
-                    args.get("max_rows", 100),
-                )
-            )
-        if name == "support_bot_sql_template_tool":
-            return _json_result(
-                support_bot_sql_template(
-                    client,
-                    registry,
-                    args["account_id"],
-                    args["template_name"],
-                    args.get("max_rows", 100),
-                )
-            )
-        if name == "renewal_eligible_contract_ids_tool":
-            return _json_result(
-                renewal_eligible_contract_ids(
-                    client, registry, args["account_id"]
                 )
             )
         if name == "prepare_contract_input_tool":
@@ -167,7 +136,7 @@ def run_tool(
             )
         if name == "search_knowledge_tool":
             top_k = min(int(args.get("top_k", 5)), 10)
-            index = KnowledgeIndex(config.knowledge_dir)
+            index = KnowledgeIndex(config)
             chunks = index.retrieve(args["query"], context_tags=set(), top_k=top_k)
             return _json_result(
                 {

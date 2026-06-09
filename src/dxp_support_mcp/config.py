@@ -18,6 +18,9 @@ class AppConfig:
     strict_writes: bool
     knowledge_dir: Path
     rag_top_k: int
+    rag_vector_top_n: int
+    rag_vector_db_dir: Path
+    rag_embedding_model: str
     trimble_model_gateway_url: str
     trimble_model: str
     trimble_max_tokens: int
@@ -40,6 +43,9 @@ def load_config() -> AppConfig:
     knowledge_dir = Path(
         os.getenv("KNOWLEDGE_DIR", str(PROJECT_ROOT / "knowledge" / "chunks"))
     ).resolve()
+    rag_vector_db_dir = Path(
+        os.getenv("RAG_VECTOR_DB_DIR", str(PROJECT_ROOT / ".rag_db"))
+    ).resolve()
 
     return AppConfig(
         graphql_url=graphql_url,
@@ -48,6 +54,11 @@ def load_config() -> AppConfig:
         strict_writes=os.getenv("MCP_STRICT_WRITES", "true").lower() != "false",
         knowledge_dir=knowledge_dir,
         rag_top_k=max(1, int(os.getenv("RAG_TOP_K", "5"))),
+        rag_vector_top_n=max(5, int(os.getenv("RAG_VECTOR_TOP_N", "20"))),
+        rag_vector_db_dir=rag_vector_db_dir,
+        rag_embedding_model=os.getenv(
+            "RAG_EMBEDDING_MODEL", "sentence-transformers/all-mpnet-base-v2"
+        ),
         trimble_model_gateway_url=os.getenv(
             "TRIMBLE_MODEL_GATEWAY_URL", "https://models.dev.trimble-ai.com"
         ).rstrip("/"),
