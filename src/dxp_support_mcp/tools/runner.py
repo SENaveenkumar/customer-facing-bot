@@ -16,6 +16,7 @@ from dxp_support_mcp.tools.contract_mutations import (
 from dxp_support_mcp.tools.contracts import (
     get_contract,
     list_contracts,
+    list_products_by_account,
     lookup_customer_context,
 )
 from dxp_support_mcp.tools.dxp_read import dxp_read
@@ -69,6 +70,30 @@ def run_tool(
                     registry,
                     args["account_id"],
                     args.get("first", 10),
+                )
+            )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
+        if name == "list_products_by_account_tool":
+            term = str(args.get("term_uom", "YEAR")).strip().upper()
+            contract_type = str(args.get("contract_type", "NEW")).strip().upper()
+            if term not in ("MONTH", "YEAR"):
+                term = "YEAR"
+            if contract_type not in ("NEW", "RENEWAL", "AMENDMENT"):
+                contract_type = "NEW"
+            currency_id = args.get("currency_id")
+            currency_id = str(currency_id).strip() if currency_id is not None else None
+            if currency_id == "":
+                currency_id = None
+
+            result = _json_result(
+                list_products_by_account(
+                    client,
+                    registry,
+                    args["account_id"],
+                    term,
+                    contract_type,
+                    currency_id,
                 )
             )
             logger.debug("runner.done name=%s result_chars=%d", name, len(result))
