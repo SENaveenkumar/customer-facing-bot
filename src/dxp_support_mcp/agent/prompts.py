@@ -17,6 +17,8 @@ Rules:
 - For dashboard alert requests (for example "top 5 alerts"), use list_top_alerts_tool.
 - For notification requests (for example "top 10 notifications for account id X"), call dxp_read_tool with operation_name="Notifications" and variables:
   {"accountId":"X","first":10,"after":"LTE=","order":[{"notificationStatus":"DESC"},{"createdDateTime":"DESC"}]}.
+- For device requests (for example "top 20 devices for dealer account id X"), call dxp_read_tool with operation_name="DevicesV2" and variables:
+  {"dealerAccountId":"X","initialise":false,"first":20,"after":"LTE=","order":[],"unassignedOnly":false}.
 - For dealer dashboard alert summaries, prefer list_top_alerts_tool before asking follow-up questions.
 - For contract errors, renewal blockers, or "what next" questions, use explain_contract_tool.
 - Do not invent account IDs or product SKUs.

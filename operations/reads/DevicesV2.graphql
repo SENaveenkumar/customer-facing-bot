@@ -1,0 +1,131 @@
+query DevicesV2(
+  $after: String
+  $dealerAccountId: ID!
+  $first: Int!
+  $initialise: Boolean!
+  $order: [DealerDeviceSortInput!]
+  $unassignedOnly: Boolean!
+  $where: DealerDeviceFilterInput
+) {
+  dealerDevicesV2(
+    after: $after
+    dealerAccountId: $dealerAccountId
+    first: $first
+    initialise: $initialise
+    order: $order
+    unassignedOnly: $unassignedOnly
+    where: $where
+  ) {
+    totalCount
+    nodes {
+      id
+      description
+      deviceType
+      firmware
+      iconUrl
+      isExternal
+      modelName
+      ownerName
+      partNumber
+      purchaseOrderNumber
+      reference
+      salesOrderNumber
+      serialNumber
+      transferDate
+      transferStatus
+      customerTransferRequest {
+        id
+        customer {
+          id
+          companyName
+          __typename
+        }
+        __typename
+      }
+      desiredDealerCustomer {
+        id
+        companyName
+        __typename
+      }
+      owner {
+        ... on Account {
+          id
+          companyName
+          __typename
+        }
+        ... on DealerCustomer {
+          id
+          companyName
+          optInStatus
+          __typename
+        }
+        __typename
+      }
+      productLines {
+        __typename
+        ... on ContractLine {
+          id
+          isExternal
+          startDate
+          status
+          contract {
+            id
+            contractNumber
+            purchaseOrderNumber
+            renewalDate
+            status
+            __typename
+          }
+          product {
+            id
+            description
+            isNonTransferable
+            family {
+              description
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+        ... on ExternalContractLine {
+          id
+          startDate
+          product {
+            id
+            description
+            family {
+              description
+              __typename
+            }
+            __typename
+          }
+          __typename
+        }
+      }
+      superKeyCount {
+        total
+        used
+        __typename
+      }
+      superKeyLines {
+        id
+        expiryDate
+        product {
+          id
+          description
+          family {
+            id
+            description
+            type
+            __typename
+          }
+          __typename
+        }
+        __typename
+      }
+      __typename
+    }
+    __typename
+  }
+}
