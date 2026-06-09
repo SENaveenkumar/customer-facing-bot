@@ -8,7 +8,9 @@ MCP server and support chatbot for the DXP GraphQL API. Helps dealers create dra
 
 - **Python 3.11+**
 - **[MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)** (`FastMCP`)
-- **httpx** for GraphQL HTTP calls
+- **Trimble Model Gateway** (`claude-4.5-sonnet` via `/openai/v1/chat/completions`)
+- **Trimble ID** OAuth2 (stage: `https://stage.id.trimblecloud.com`)
+- **FastAPI** chat API + **httpx** for HTTP calls
 
 ## Setup
 
@@ -85,12 +87,55 @@ python -m dxp_support_mcp.cli tool explain_contract_tool "{\"contract_id\":\"<gu
 python -m dxp_support_mcp.cli tool get_contract_briefing_tool "{\"contract_id\":\"<guid>\"}"
 ```
 
-Optional env: `KNOWLEDGE_DIR`, `RAG_TOP_K`, `OPENAI_API_KEY`.
+Optional env: `KNOWLEDGE_DIR`, `RAG_TOP_K`, `RAG_VECTOR_TOP_N`, `RAG_VECTOR_DB_DIR`, `RAG_EMBEDDING_MODEL`.
+## Chat API (Trimble Model Gateway)
+
+Uses [Trimble Model Gateway](https://developer.ai.trimble.com/api/models-inference/) with `claude-4.5-sonnet`, TID OAuth, and local MCP tool execution.
+
+```bash
+# Configure .env (see .env.example):
+#   TRIMBLE_MODEL_GATEWAY_URL=https://models.dev.trimble-ai.com
+#   TID_TOKEN=<paste TID access token manually>
+#   Or: TID_CLIENT_ID / TID_CLIENT_SECRET (auto-fetch via OAuth)
+
+python -m dxp_support_mcp.chat_api
+# or: dxp-support-api
+```
+
+**Endpoints:**
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Health check |
+| `/v1/sessions` | POST | Create chat session |
+| `/v1/chat` | POST | Send message (`{"message": "...", "session_id": "optional"}`) |
+| `/v1/sessions/{id}/reset` | POST | Clear conversation history |
+| `/v1/chat/completions` | POST | Raw Model Gateway passthrough (no MCP tools) |
+
+## Chat UI (Gradio)
+
+Simple browser chat to test without curl or Swagger.
+
+```bash
+# Direct mode (uses .env, no separate API server needed)
+python -m dxp_support_mcp.chat_ui
+# or: dxp-support-ui
+```
+
+Open **http://127.0.0.1:7860** in your browser.
+
+To talk to a running Chat API instead, set in `.env`:
+
+```env
+CHAT_API_URL=http://localhost:8080
+```
+
+Then start the API (`python -m dxp_support_mcp.chat_api`) and the UI in separate terminals.
 
 ## Local chat CLI
 
 ```bash
-# AI chat (needs OPENAI_API_KEY)
+# AI chat (needs TID_TOKEN or TID client credentials)
 python -m dxp_support_mcp.cli
 
 # Direct tools without LLM

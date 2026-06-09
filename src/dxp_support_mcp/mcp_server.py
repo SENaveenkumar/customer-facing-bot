@@ -195,7 +195,7 @@ def search_knowledge_tool(query: str, top_k: int = 5) -> str:
     """Search RAG knowledge chunks without calling GraphQL (debug / general DXP questions)."""
     from dxp_support_mcp.support.rag_retriever import KnowledgeIndex
 
-    index = KnowledgeIndex(config.knowledge_dir)
+    index = KnowledgeIndex(config)
     chunks = index.retrieve(query, context_tags=set(), top_k=min(top_k, 10))
     return _json_result(
         {

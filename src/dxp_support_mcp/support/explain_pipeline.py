@@ -14,9 +14,15 @@ _index_cache: dict[str, KnowledgeIndex] = {}
 
 
 def _get_index(config: AppConfig) -> KnowledgeIndex:
-    key = str(config.knowledge_dir)
+    key = "|".join(
+        (
+            str(config.knowledge_dir),
+            str(config.rag_vector_db_dir),
+            config.rag_embedding_model,
+        )
+    )
     if key not in _index_cache:
-        _index_cache[key] = KnowledgeIndex(config.knowledge_dir)
+        _index_cache[key] = KnowledgeIndex(config)
     return _index_cache[key]
 
 
