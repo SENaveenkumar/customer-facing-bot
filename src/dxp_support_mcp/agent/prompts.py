@@ -10,6 +10,7 @@ Workflow for new contracts:
 Rules:
 - Never mutate without confirmed=true after showing the user what will happen.
 - Use get_contract_tool or list_contracts_tool for status questions.
+- For dashboard alert requests (for example "top 5 alerts"), use list_top_alerts_tool.
 - For contract errors, renewal blockers, or "what next" questions, use explain_contract_tool.
 - Do not invent account IDs or product SKUs.
 """
@@ -54,6 +55,22 @@ TOOL_DEFINITIONS = [
                     "first": {"type": "integer"},
                 },
                 "required": ["account_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "list_top_alerts_tool",
+            "description": "List top unresolved/unignored dealer dashboard alerts (default top 5)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "first": {"type": "integer"},
+                    "after": {"type": "string"},
+                    "search_term": {"type": "string"},
+                    "module": {"type": "string"},
+                },
             },
         },
     },

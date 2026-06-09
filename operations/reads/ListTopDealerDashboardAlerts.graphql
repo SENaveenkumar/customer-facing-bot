@@ -1,0 +1,55 @@
+query ListTopDealerDashboardAlerts(
+  $after: String
+  $searchTerm: String
+  $where: DealerDashboardFilterInput
+) {
+  dealerDashboardEvents(
+    after: $after
+    first: 5
+    order: [{ createdDateTime: DESC }]
+    searchTerm: $searchTerm
+    where: $where
+  ) {
+    totalCount
+    nodes {
+      id
+      createdDateTime
+      entityId
+      ignoredBy
+      ignoredDate
+      isIgnored
+      isResolved
+      resolvedBy
+      resolvedDate
+      validUntilDate
+      additionalData {
+        contractData {
+          amendmentQuoteId
+          contractNumber
+          customerName
+          customerRequestId
+          purchaseOrderNumber
+          status
+          unassignedLicenseCount
+        }
+        deviceData {
+          customerName
+          deviceModel
+          partNumber
+          serialNumber
+          status
+        }
+      }
+      eventType {
+        category
+        module
+        order
+        type
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+}

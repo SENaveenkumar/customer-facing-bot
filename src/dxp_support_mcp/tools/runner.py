@@ -15,6 +15,7 @@ from dxp_support_mcp.tools.contract_mutations import (
 from dxp_support_mcp.tools.contracts import (
     get_contract,
     list_contracts,
+    list_top_dealer_dashboard_alerts,
     lookup_customer_context,
 )
 from dxp_support_mcp.tools.dxp_read import dxp_read
@@ -74,6 +75,21 @@ def run_tool(
                     args["dealer_account_id"],
                     args["customer_account_id"],
                     term,
+                )
+            )
+        if name == "list_top_alerts_tool":
+            first = max(1, min(int(args.get("first", 5)), 5))
+            module = (args.get("module", "CONTRACT") or "CONTRACT").strip().upper()
+            after = (args.get("after") or "").strip() or None
+            search_term = (args.get("search_term") or "").strip() or None
+            return _json_result(
+                list_top_dealer_dashboard_alerts(
+                    client,
+                    registry,
+                    first,
+                    after,
+                    search_term,
+                    module,
                 )
             )
         if name == "prepare_contract_input_tool":

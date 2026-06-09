@@ -76,3 +76,38 @@ def lookup_customer_context(
         },
     )
     return {"account": account, "customer": customer, "products": products}
+
+
+def list_top_dealer_dashboard_alerts(
+    client: GraphQLClient,
+    registry: OperationRegistry,
+    first: int = 5,
+    after: str | None = None,
+    search_term: str | None = None,
+    module: str = "CONTRACT",
+) -> Any:
+    normalized_first = max(1, min(first, 5))
+    normalized_module = (module or "CONTRACT").strip().upper()
+    variables: dict[str, Any] = {
+        "after": after,
+        "searchTerm": search_term,
+        "where": {
+            "and": [
+                {
+                    "and": [
+                        {"isIgnored": {"eq": False}},
+                        {"isResolved": {"eq": False}},
+                    ]
+                },
+                {"eventType": {"module": {"eq": normalized_module}}},
+            ]
+        },
+    }
+
+    data = dxp_read(client, registry, "ListTopDealerDashboardAlerts", variables)
+    events = ((data or {}).get("dealerDashboardEvents") or {})
+    nodes = events.get("nodes") or []
+    if normalized_first < 5 and isinstance(nodes, list):
+        events["nodes"] = nodes[:normalized_first]
+    events["totalCount"] = len(events.get("nodes") or [])
+    return data
