@@ -24,6 +24,24 @@ def list_contracts(
     )
 
 
+def list_products_by_account(
+    client: GraphQLClient,
+    registry: OperationRegistry,
+    account_id: str,
+    term_uom: Literal["MONTH", "YEAR"] = "YEAR",
+    contract_type: Literal["NEW", "RENEWAL", "AMENDMENT"] = "NEW",
+    currency_id: str | None = None,
+) -> Any:
+    variables: dict[str, Any] = {
+        "accountId": account_id,
+        "termUom": term_uom,
+        "contractType": contract_type,
+    }
+    if currency_id:
+        variables["currencyId"] = currency_id
+    return dxp_read(client, registry, "ListProductsByAccount", variables)
+
+
 def lookup_customer_context(
     client: GraphQLClient,
     registry: OperationRegistry,

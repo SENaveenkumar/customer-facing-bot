@@ -1,0 +1,23 @@
+query ListProductsByAccount(
+  $accountId: ID!
+  $termUom: TermUOMType
+  $contractType: ContractType
+  $currencyId: String
+) {
+  products(
+    accountId: $accountId
+    termUom: $termUom
+    contractType: $contractType
+    currencyId: $currencyId
+  ) {
+    description
+    id
+    isEnabled
+    isNonTransferable
+    isSuperKeyEligible
+    productType
+    subscriptionFor
+    subscriptionModel
+    trialDuration
+  }
+}

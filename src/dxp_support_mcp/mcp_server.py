@@ -20,6 +20,7 @@ from dxp_support_mcp.tools.contract_mutations import (
 from dxp_support_mcp.tools.contracts import (
     get_contract,
     list_contracts,
+    list_products_by_account,
     lookup_customer_context,
 )
 from dxp_support_mcp.tools.dxp_read import dxp_read
@@ -86,6 +87,29 @@ def list_contracts_tool(account_id: str, first: int = 10) -> str:
 
 
 @mcp.tool()
+def list_products_by_account_tool(
+    account_id: str,
+    term_uom: str = "YEAR",
+    contract_type: str = "NEW",
+    currency_id: str | None = None,
+) -> str:
+    """List products for a dealer account, optionally filtered by term/contract/currency."""
+    normalized_term_uom = (term_uom or "").strip().upper()
+    normalized_contract_type = (contract_type or "").strip().upper()
+    normalized_currency_id = (currency_id or "").strip() or None
+
+    term: Any = normalized_term_uom if normalized_term_uom in ("MONTH", "YEAR") else "YEAR"
+    contract: Any = (
+        normalized_contract_type
+        if normalized_contract_type in ("NEW", "RENEWAL", "AMENDMENT")
+        else "NEW"
+    )
+    return _handle(list_products_by_account)(
+        client, registry, account_id, term, contract, normalized_currency_id
+    )
+
+
+@mcp.tool()
 def lookup_customer_context_tool(
     dealer_account_id: str,
     customer_account_id: str,
@@ -112,12 +136,13 @@ def prepare_contract_input_tool(
 @mcp.tool()
 def create_contract_smart_tool(
     account_id: str,
+    contract_id: str | None = None,
     user_input: dict[str, Any] | None = None,
     confirmed: bool = False,
 ) -> str:
-    """Create draft using user_input or last-contract defaults for this account_id."""
+    """Prepare smart draft payload (including product lines) without creating contract."""
     return _handle(create_contract_smart)(
-        client, registry, config, account_id, user_input, confirmed
+        client, registry, config, account_id, contract_id, user_input, confirmed
     )
 
 
