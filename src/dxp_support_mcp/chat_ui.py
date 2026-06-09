@@ -74,8 +74,8 @@ def _build_ui() -> gr.Blocks:
         chat = gr.ChatInterface(
             fn=_chat_via_api if _use_api else _chat_direct,
             examples=[
-                "What can you help me with?",
-                "List recent contracts for my dealer account",
+                "Want to create a new draft contract?",
+                "Show eligible products for my dealer account (YEAR) so I can pick quantity",
             ],
         )
 

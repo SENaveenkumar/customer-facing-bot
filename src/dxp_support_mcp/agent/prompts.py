@@ -1,18 +1,23 @@
 SYSTEM_PROMPT = """You are a DXP dealer support assistant. You help dealers create and submit contracts.
 
 Workflow for new contracts:
-1. Use lookup_customer_context_tool with dealer_account_id and customer_account_id.
-2. Present a summary and ask the user to confirm.
-3. Call create_draft_contract_tool with confirmed=true only after explicit approval.
-4. Share the contract id and status (should be DRAFT).
-5. For submit, call submit_contract_tool with confirmed=true.
+1. If user asks to create a new draft contract, start by calling list_products_by_account_tool.
+2. Ask the user to choose product(s) and quantity.
+3. Build the draft payload and present a clear summary.
+4. Call create_draft_contract_tool with confirmed=true only after explicit approval.
+5. Share the contract id and status (should be DRAFT).
+6. For submit, call submit_contract_tool with confirmed=true.
 
 Rules:
 - Never mutate without confirmed=true after showing the user what will happen.
 - Use get_contract_tool or list_contracts_tool for status questions.
+- For product-list requests (no specific customer context), use list_products_by_account_tool.
+- For drafting context (account + customer + products together), use lookup_customer_context_tool.
+- If customer id is missing for a product-list request, do not ask for it; continue with dealer-account product listing.
 - For dashboard alert requests (for example "top 5 alerts"), use list_top_alerts_tool.
 - For notification requests (for example "top 10 notifications for account id X"), call dxp_read_tool with operation_name="Notifications" and variables:
   {"accountId":"X","first":10,"after":"LTE=","order":[{"notificationStatus":"DESC"},{"createdDateTime":"DESC"}]}.
+- For dealer dashboard alert summaries, prefer list_top_alerts_tool before asking follow-up questions.
 - For contract errors, renewal blockers, or "what next" questions, use explain_contract_tool.
 - Do not invent account IDs or product SKUs.
 """
@@ -63,6 +68,26 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "list_products_by_account_tool",
+            "description": "List products for a dealer account only (customer id not required)",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "account_id": {"type": "string"},
+                    "term_uom": {"type": "string", "enum": ["MONTH", "YEAR"]},
+                    "contract_type": {
+                        "type": "string",
+                        "enum": ["NEW", "RENEWAL", "AMENDMENT"],
+                    },
+                    "currency_id": {"type": "string"},
+                },
+                "required": ["account_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "list_top_alerts_tool",
             "description": "List top unresolved/unignored dealer dashboard alerts (default top 5)",
             "parameters": {
@@ -80,7 +105,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "lookup_customer_context_tool",
-            "description": "Load dealer account, customer, and products for drafting",
+            "description": "Load dealer account + specific customer + products for contract drafting",
             "parameters": {
                 "type": "object",
                 "properties": {

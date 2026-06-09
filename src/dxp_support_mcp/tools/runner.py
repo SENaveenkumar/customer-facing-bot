@@ -16,6 +16,7 @@ from dxp_support_mcp.tools.contract_mutations import (
 from dxp_support_mcp.tools.contracts import (
     get_contract,
     list_contracts,
+    list_products_by_account,
     list_top_dealer_dashboard_alerts,
     lookup_customer_context,
 )
@@ -74,6 +75,30 @@ def run_tool(
             )
             logger.debug("runner.done name=%s result_chars=%d", name, len(result))
             return result
+        if name == "list_products_by_account_tool":
+            term = str(args.get("term_uom", "YEAR")).strip().upper()
+            contract_type = str(args.get("contract_type", "NEW")).strip().upper()
+            if term not in ("MONTH", "YEAR"):
+                term = "YEAR"
+            if contract_type not in ("NEW", "RENEWAL", "AMENDMENT"):
+                contract_type = "NEW"
+            currency_id = args.get("currency_id")
+            currency_id = str(currency_id).strip() if currency_id is not None else None
+            if currency_id == "":
+                currency_id = None
+
+            result = _json_result(
+                list_products_by_account(
+                    client,
+                    registry,
+                    args["account_id"],
+                    term,
+                    contract_type,
+                    currency_id,
+                )
+            )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "lookup_customer_context_tool":
             term = args.get("term_uom", "YEAR")
             if term not in ("MONTH", "YEAR"):
@@ -87,12 +112,14 @@ def run_tool(
                     term,
                 )
             )
+            logger.debug("runner.done name=%s result_chars=%d", name, len(result))
+            return result
         if name == "list_top_alerts_tool":
             first = max(1, min(int(args.get("first", 5)), 5))
             module = (args.get("module", "CONTRACT") or "CONTRACT").strip().upper()
             after = (args.get("after") or "").strip() or None
             search_term = (args.get("search_term") or "").strip() or None
-            return _json_result(
+            result = _json_result(
                 list_top_dealer_dashboard_alerts(
                     client,
                     registry,
