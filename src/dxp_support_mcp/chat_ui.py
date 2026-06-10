@@ -61,18 +61,12 @@ def _reset() -> None:
 
 
 def _build_ui() -> gr.Blocks:
-    mode = f"API ({_api_base})" if _use_api else "direct"
-    title = f"DXP Support Chat — {config.trimble_model} [{mode}]"
-
-    with gr.Blocks(title="DXP Support Chat") as demo:
-        gr.Markdown(f"# {title}")
-        gr.Markdown(
-            "Ask about contracts, customers, renewals, and more. "
-            "Mutations require your explicit confirmation in chat."
-        )
+    with gr.Blocks(title="DXP Chatbot") as demo:
+        gr.Markdown("# DXP Chatbot")
 
         chat = gr.ChatInterface(
             fn=_chat_via_api if _use_api else _chat_direct,
+            chatbot=gr.Chatbot(height=620),
             examples=[
                 "Want to create a new draft contract?",
                 "Show 5 important updates or alerts from my dealer dashboard",
