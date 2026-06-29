@@ -124,7 +124,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "prepare_contract_input_tool",
-            "description": "Build CreateQuoteInput from user_input or last contract",
+            "description": "Build CreateQuoteInput from user_input merged with default profile (quoteLines required)",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -139,7 +139,7 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "create_contract_smart_tool",
-            "description": "Create draft using user_input or last-contract defaults",
+            "description": "Create draft using user_input merged with default profile (quoteLines required)",
             "parameters": {
                 "type": "object",
                 "properties": {

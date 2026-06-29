@@ -150,7 +150,7 @@ def prepare_contract_input_tool(
     account_id: str,
     user_input: dict[str, Any] | None = None,
 ) -> str:
-    """Build CreateQuoteInput from user_input, or from last contract on this account if omitted."""
+    """Build CreateQuoteInput from user_input merged with the default profile (quoteLines required)."""
     return _handle(prepare_contract_input)(
         client, registry, account_id, user_input
     )
