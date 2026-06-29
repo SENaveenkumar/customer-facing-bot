@@ -6,19 +6,19 @@ from dxp_support_mcp.graphql.allowlist import OperationRegistry
 from dxp_support_mcp.graphql.client import GraphQLClient
 from dxp_support_mcp.tools.dxp_read import dxp_read
 
-# Hardcoded fallback profile used when LastContractDefaults is unavailable.
-# Note: quoteLines must still come from user input/product selection.
+# Hardcoded fallback when LastContractDefaults is unavailable.
+# quoteLines are not included — caller must supply productId + quantity in user_input.
 HARDCODED_CREATE_PROFILE: dict[str, Any] = {
-    "billToAccountId": "300000166572548",
-    "customerAccountId": "1777717602890111",
-    "billToAddressId": "300000171128845",
-    "shipToAddressId": "1777717602891132",
-    "billToContactId": "1768215280131452",
-    "shipToContactId": "1777717602890454",
-    "currencyCode": "USD",
-    "termUOM": "YEAR",
-    "termQuantity": 1,
     "autoRenew": False,
+    "billToAccountId": "300000166572548",
+    "billToAddressId": "300000326145330",
+    "billToContactId": "1772537152821204",
+    "shipToAddressId": "1752154117458796",
+    "shipToContactId": "1757506796491262",
+    "currencyCode": "USD",
+    "customerAccountId": "300000016059641",
+    "termQuantity": 1,
+    "termUOM": "YEAR",
     "contractType": "NEW",
 }
 
